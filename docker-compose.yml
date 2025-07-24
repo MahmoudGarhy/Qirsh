@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: qirsh_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: qirsh_user
+      POSTGRES_PASSWORD: qirsh_pass
+      POSTGRES_DB: qirsh
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - qirsh_net
+
+  redis:
+    image: redis:7
+    container_name: qirsh_redis
+    restart: always
+    networks:
+      - qirsh_net
+
+  qirsh-api:
+    build: ./api
+    container_name: qirsh_api
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgres://qirsh_user:qirsh_pass@postgres:5432/qirsh
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: changemejwt
+      NEXTAUTH_SECRET: changemenextauth
+    networks:
+      - qirsh_net
+    volumes:
+      - ./api:/app
+
+  qirsh-web:
+    build: ./web
+    container_name: qirsh_web
+    depends_on:
+      - qirsh-api
+    ports:
+      - "3000:3000"
+    environment:
+      API_URL: http://qirsh-api:3001
+    networks:
+      - qirsh_net
+    volumes:
+      - ./web:/app
+
+volumes:
+  db_data:
+
+networks:
+  qirsh_net:
+    driver: bridge
