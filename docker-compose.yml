@@ -43,7 +43,7 @@ services:
     depends_on:
       - qirsh-api
     ports:
-      - "3000:3000"
+      - "3003:3000"
     environment:
       API_URL: http://qirsh-api:3001
     networks:
